@@ -1,6 +1,6 @@
-use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
 use std::fmt;
+use ::config::{Config, ConfigError, File};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Log {
@@ -21,11 +21,7 @@ pub struct Settings {
     pub env: ENV,
 }
 
-const CONFIG_FILE_PATH: &str = "./config/Default.toml";
 const CONFIG_FILE_PREFIX: &str = "./config/";
-
-const OTHER_CONFIG_FILE_PATH: &str = "./configjson/Default.json";
-const OTHER_CONFIG_FILE_PREFIX: &str = "./configjson/";
 
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
@@ -33,17 +29,7 @@ impl Settings {
         let mut s = Config::new();
         s.set("env", env.clone())?;
 
-        s.merge(File::with_name(CONFIG_FILE_PATH))?;
         s.merge(File::with_name(&format!("{}{}", CONFIG_FILE_PREFIX, env)))?;
-
-        s.merge(File::with_name(OTHER_CONFIG_FILE_PATH))?;
-        s.merge(File::with_name(&format!(
-            "{}{}",
-            OTHER_CONFIG_FILE_PREFIX, env
-        )))?;
-
-        // This makes it so "EA_SERVER__PORT overrides server.port
-        s.merge(Environment::with_prefix("ea").separator("__"))?;
 
         s.try_into()
     }
@@ -73,5 +59,16 @@ impl From<&str> for ENV {
             "Production" => ENV::Production,
             _ => ENV::Development,
         }
+    }
+}
+
+#[cfg(test)]
+mod config{
+    use crate::config::Settings;
+    #[test]
+    fn from_file(){
+        let settings = Settings::new().unwrap_or_else(|e|{
+            panic!("failed to create env");
+        });
     }
 }
