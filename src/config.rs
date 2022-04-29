@@ -8,29 +8,16 @@ pub struct Log {
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct Server {
-    pub port: u16,
-    pub url: String,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Rule {
-    pub name: String,
-    pub rule_set: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Job {
-    pub interval: i64,
-    pub enabled: bool,
+pub struct Rabbitmq {
+    pub uri: String,
+    pub queue: String,
+    pub tag: String
 }
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-    pub server: Server,
-    pub rules: Vec<Rule>,
+    pub rabbitmq: Rabbitmq,
     pub log: Log,
-    pub job: Job,
     pub env: ENV,
 }
 

@@ -1,5 +1,7 @@
-mod config;
+extern crate rabbitmq_rust;
 
-fn main() {
+
+#[tokio::main]
+async fn main() {
     println!("Hello, world!");
 }
