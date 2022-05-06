@@ -7,19 +7,24 @@ use futures_lite::stream::StreamExt;
 struct RabbitmqConnection {
     conn: Connection,
     config: Rabbitmq,
-    consumer: Consumer,
 }
 
 impl RabbitmqConnection {
     async fn new(config: Rabbitmq) -> RabbitmqConnection {
-        let conn = Connection::connect(
-            &config.uri,
-            ConnectionProperties::default(),
-        ).await.unwrap_or_else(|e| {
-            panic!("failed to connect to rabbitmq: {:?}", e);
-        });
+        let addr = format!("amqp://{user}:{pass}@{url}", user = config.mqtt_user, pass = config.mqtt_pwd, url = config.amqp_addr);
+        let options = ConnectionProperties::default();
+        let conn = Connection::connect(&*addr, options)
+            .await
+            .expect("connection error");
 
-        let channel = conn.create_channel().await.unwrap_or_else(|e| {
+        RabbitmqConnection {
+            conn,
+            config,
+        }
+    }
+
+    async fn process_queue(&mut self) {
+        let channel = self.conn.create_channel().await.unwrap_or_else(|e| {
             panic!("failed to create channel");
         });
         let mut consumer = channel
@@ -33,14 +38,6 @@ impl RabbitmqConnection {
             panic!("failed to create consumer");
         });
 
-        RabbitmqConnection {
-            conn,
-            config,
-            consumer,
-        }
-    }
-
-    async fn process_queue(&mut self) {
         while let Some(delivery) = self.consumer.next().await {
             let delivery = delivery.expect("error in consumer");
             delivery
